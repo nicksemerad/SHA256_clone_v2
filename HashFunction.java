@@ -7,14 +7,7 @@ public class HashFunction {
 	/*
 	 * Heavily a work in progress!!
 	 * 
-	 * note: we are on step 6. I am thinking that I might want to forego the Word
-	 * class, and instead just operate on everything using the BitSets. If I do that
-	 * then I will need to change all of the operations in the Word class to work
-	 * differently. Thats fine though because right now they still all return
-	 * BitSets and not Words, so I would have to change it in the future anyways.
-	 * The only part I am unsure of is the best way to make them all static methods
-	 * and easy to use. So I will need to re-factor and place the operation methods
-	 * in the class that I am performing the hashing in.
+	 * note: we are on step 7
 	 * 
 	 * 1. message to binary
 	 * 
