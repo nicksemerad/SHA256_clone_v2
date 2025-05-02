@@ -15,7 +15,7 @@ public class Word {
 	public Word(BitSet bits) {
 		this.bits = bits;
 	}
-	
+
 	/**
 	 * 
 	 * @param longValue
@@ -23,7 +23,7 @@ public class Word {
 	public Word(long longValue) {
 		this(longToBits(longValue));
 	}
-	
+
 	/**
 	 * 
 	 * @param count
@@ -36,7 +36,7 @@ public class Word {
 		}
 		return rotated;
 	}
-	
+
 	/**
 	 * 
 	 * @param count
@@ -49,7 +49,7 @@ public class Word {
 		}
 		return rotated;
 	}
-	
+
 	/**
 	 * 
 	 * @param other
@@ -57,16 +57,16 @@ public class Word {
 	 */
 	public BitSet xor(BitSet other) {
 		BitSet clone = (BitSet) other.clone();
-		clone.xor(bits);			
+		clone.xor(bits);
 		return clone;
 	}
-	
+
 	public BitSet xor(BitSet setOne, BitSet setTwo) {
 		BitSet clone = (BitSet) setTwo.clone();
-		clone.xor(setOne);			
+		clone.xor(setOne);
 		return clone;
 	}
-	
+
 	/**
 	 * 
 	 * @param other
@@ -74,10 +74,10 @@ public class Word {
 	 */
 	public BitSet add(BitSet other) {
 		long scale = 1L << 32;
-		long sum = getBitsValue(bits) + getBitsValue(other);
+		long sum = bitsToLong(bits) + bitsToLong(other);
 		return longToBits(sum % scale);
 	}
-	
+
 	/**
 	 * 
 	 * @param other
@@ -86,7 +86,7 @@ public class Word {
 	public BitSet σ0(BitSet other) {
 		return xor(xor(rotr(7), rotr(18)), shr(3));
 	}
-	
+
 	/**
 	 * 
 	 * @param other
@@ -95,7 +95,7 @@ public class Word {
 	public BitSet σ1(BitSet other) {
 		return xor(xor(rotr(17), rotr(19)), shr(10));
 	}
-	
+
 	/**
 	 * 
 	 * @param other
@@ -104,7 +104,7 @@ public class Word {
 	public BitSet Σ0(BitSet other) {
 		return xor(xor(rotr(2), rotr(13)), rotr(22));
 	}
-	
+
 	/**
 	 * 
 	 * @param other
@@ -113,20 +113,21 @@ public class Word {
 	public BitSet Σ1(BitSet other) {
 		return xor(xor(rotr(6), rotr(11)), shr(25));
 	}
-	
-	/* 
-	 * choice: for three words, if word1[0] is 1 take word2[0], otherwise take word3[0] 
+
+	/*
+	 * choice: for three words, if word1[0] is 1 take word2[0], otherwise take
+	 * word3[0]
 	 * 
 	 * majority: for three words take the majority at each index
 	 */
 	public BitSet choice(BitSet setOne, BitSet setTwo, BitSet setThree) {
 		BitSet bits = new BitSet(32);
-		for(int i = 0; i < 32; i++) {
+		for (int i = 0; i < 32; i++) {
 			bits.set(i, setOne.get(i) ? setTwo.get(i) : setThree.get(i));
 		}
 		return bits;
 	}
-	
+
 	/**
 	 * 
 	 * @param other
@@ -134,13 +135,16 @@ public class Word {
 	 */
 	public BitSet majority(BitSet setOne, BitSet setTwo, BitSet setThree) {
 		BitSet bits = new BitSet(32);
-		for(int i = 0; i < 32; i++) {
+		for (int i = 0; i < 32; i++) {
 			bits.set(i, sumBits(i, setOne, setTwo, setThree));
 		}
 		return bits;
 	}
-	
+
 	/**
+	 * With a 1 being true and a 0 being false, the majority can be found by summing
+	 * the bits in each set at a specific index. They can sum to be 0, 1, 2, or 3.
+	 * Returns true if the majority is 1 and false if it is zero.
 	 * 
 	 * @param other
 	 * @return
@@ -148,7 +152,7 @@ public class Word {
 	private boolean sumBits(int i, BitSet setOne, BitSet setTwo, BitSet setThree) {
 		return ((setOne.get(i) ? 1 : 0) + (setTwo.get(i) ? 1 : 0) + (setThree.get(i) ? 1 : 0)) > 1;
 	}
-	
+
 	/**
 	 * 
 	 * @param value
@@ -165,16 +169,16 @@ public class Word {
 		}
 		return bits;
 	}
-	
+
 	/**
 	 * 
 	 * @param set
 	 * @return
 	 */
-	public static long getBitsValue(BitSet set) {
+	public static long bitsToLong(BitSet set) {
 		return reverse(set).toLongArray()[0];
 	}
-	
+
 	/**
 	 * 
 	 * @param set
@@ -182,12 +186,12 @@ public class Word {
 	 */
 	public static BitSet reverse(BitSet set) {
 		BitSet reversed = new BitSet(32);
-		for(int i = 0; i < 32; i++) {
-			reversed.set(i, set.get(31-i));
+		for (int i = 0; i < 32; i++) {
+			reversed.set(i, set.get(31 - i));
 		}
 		return reversed;
 	}
-	
+
 	/**
 	 * 
 	 */
