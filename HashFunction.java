@@ -1,6 +1,8 @@
 package nicks_hash_function;
 
 import java.util.BitSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 public class HashFunction {
 
@@ -54,7 +56,13 @@ public class HashFunction {
 
 	}
 
-
+	public static void printList(LinkedList<BitSet> list) {
+		Iterator<BitSet> itr = list.iterator();
+		while(itr.hasNext()) {
+			printBits(itr.next(), 32);
+		}
+	}
+	
 	public static void printArr(BitSet[] arr) {
 		for (BitSet bits : arr) {
 			if (bits != null) {
