@@ -19,8 +19,8 @@ public class MessageParser {
 	 * @param input
 	 * @return
 	 */
-	private static int messageSize(BitSet input) {
-		int sum = input.length() + 64;
+	public static int messageSize(int inputLength) {
+		int sum = inputLength;
 		int additionalBits = sum - (sum % 512);
 		return 512 + additionalBits;
 	}
@@ -55,7 +55,7 @@ public class MessageParser {
 	 */
 	public static BitSet parse(String input) {
 		BitSet bits = stringToBits(input);
-		int messageSize = messageSize(bits);
+		int messageSize = messageSize(bits.length() + 64);
 		String size = Integer.toBinaryString(bits.length() - 1);
 		for (int i = 0; i < size.length(); i++) {
 			if (size.charAt(size.length() - (1 + i)) == '1') {

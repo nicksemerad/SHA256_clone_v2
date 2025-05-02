@@ -1,6 +1,7 @@
 package nicks_hash_function;
 
 import java.util.BitSet;
+import java.util.LinkedList;
 
 /**
  * 
@@ -9,7 +10,6 @@ public class HashRegister {
 	private static long scale;
 	private static short[] primes;
 	private BitSet[] register;
-	private BitSet message;
 
 	public HashRegister(String input) {
 		scale = 1L << 32;
@@ -17,17 +17,9 @@ public class HashRegister {
 				89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193,
 				197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311 };
 		initRegister();
-		message = MessageParser.parse(input);
+		compressBlocks(MessageParser.parse(input));
 	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public BitSet getMessage() {
-		return message;
-	}
-	
+
 	/**
 	 * Calculates and returns the hash register, which is what the entire message is
 	 * compressed into. This method only gets the initial register before any
@@ -46,18 +38,42 @@ public class HashRegister {
 		return register;
 	}
 
+	/**
+	 * Compresses each of the message blocks into the register.
+	 * 
+	 * @param message
+	 */
+	public void compressBlocks(BitSet message) {
+		int numBlocks = MessageParser.messageSize(message.length()) / 512;
+		for(int i = 0; i < numBlocks; i++) {
+			Block block = new Block(message.get(i * 512, (i + 1) * 512));
+			block.propogate();
+//			compress(block);
+		}
+	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	/**
+	 * Compresses a given block into the register.
+	 * 
+	 * @param block
+	 */
+	public void compress(Block block) {
+		BitSet[] reg = register.clone();
+		for(int i = 0; i < 64; i++) {
+			BitSet c0 = getConstant(i);
+			BitSet b0 = block.words[i];
+			// T1 = SIG1(reg[4]) + choice(reg[4], reg[5], reg[6]) + reg[7] + c0 + b0
+			choice(reg[4], reg[5], reg[6]);
+			// T2 = SIG0(reg[0]) + majority(reg[0], reg[1], reg[2])
+			majority(reg[0], reg[1], reg[2]);
+			
+			//shift all words down
+			
+			// reg[0] = T1 + T2
+			// reg[4] = reg[4] + T1
+		}
+	}
+
 	/**
 	 * Converts a root as a double value into a binary string. First the root value
 	 * modulus 1 is taken. This is done to isolate the fraction portion of the root.
@@ -104,17 +120,6 @@ public class HashRegister {
 			}
 		}
 		return bits;
-	}
-	
-	/**
-	 * Propagates a message block from 16 words (512 bits) to 64 words (2048 bits)
-	 * 
-	 * @param m
-	 */
-	public static void propogateMessage(BitSet[] m) {
-		for (int i = 16; i < 64; i++) {
-			m[i] = add(add(add(m[i - 16], σ0(m[i - 15])), m[i - 7]), σ1(m[i - 2]));
-		}
 	}
 
 	/**
@@ -292,9 +297,44 @@ public class HashRegister {
 		return ((valOne ? 1 : 0) + (valThree ? 1 : 0) + (valThree ? 1 : 0)) > 1;
 	}
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+	/**
+	 * 
+	 */
+	private class Block {
+		public BitSet[] words;
+		public LinkedList<BitSet> wordList; // note: experimenting with a linked list instead
 
+		/**
+		 * 
+		 * @param blockBits
+		 */
+		public Block(BitSet blockBits) {
+//			words = new BitSet[64];
+//			for (int i = 0; i < 16; i++) {
+//				words[i] = blockBits.get((i * 32), ((i + 1) * 32));
+//			}
+			
+			words = new BitSet[64];
+			wordList = new LinkedList<BitSet>();
+			for (int i = 0; i < 16; i++) {
+				words[i] = blockBits.get((i * 32), ((i + 1) * 32));
+				wordList.addLast(blockBits);
+			}
+		}
+
+		/**
+		 * Propagates a message block from 16 words (512 bits) to 64 words (2048 bits)
+		 * 
+		 * @param m
+		 */
+		public void propogate() {
+			for (int i = 16; i < 64; i++) {
+				BitSet word0 = words[i - 16];
+				BitSet word1 = σ0(words[i - 15]);
+				BitSet word9 = words[i - 7];
+				BitSet word14 = σ1(words[i - 2]);
+				words[i] = add(add(add(word0, word1), word9), word14);
+			}
+		}
 	}
-
 }

@@ -55,7 +55,7 @@ public class HashFunction {
 	}
 
 
-	private static void printArr(BitSet[] arr) {
+	public static void printArr(BitSet[] arr) {
 		for (BitSet bits : arr) {
 			if (bits != null) {
 				printBits(bits, 32);
