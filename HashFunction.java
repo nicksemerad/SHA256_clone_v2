@@ -42,26 +42,27 @@ public class HashFunction {
 		// convert the double to a long and create a BitSet with it
 		return new Word((long) root);
 	}
-
-	public static void main(String[] args) {
-		String input = "abc";
-		BitSet bits = new BitSet(input.length() * 8);
-		char[] chars = input.toCharArray();
-		for (int i = 0; i < chars.length; i++) {
-			String charStr = Integer.toBinaryString(Integer.valueOf(chars[i]));
-			for (int j = 0; j < 8; j++) {
-				int zeroes = 8 - charStr.length(); // 3
-				if ((j >= zeroes) && (charStr.charAt(j - zeroes) == '1')) {
-					bits.set((i * 8) + j);
-				}
-			}
-		}
-		for (int i = 0; i < input.length() * 8; i++) {
+	
+	private static void printBits(BitSet bits, int size) {
+		for (int i = 0; i < size; i++) {
 			boolean val = bits.get(i);
 			System.out.print(val ? 1 : 0);
 		}
 		System.out.print("\n");
+	}
+	
+	private static void printBlock(BitSet bits) {
+		for (int i = 0; i < 16; i++) {
+			int idx = i * 32;
+			printBits(bits.get(idx, idx + 32), 32);
+		}
+		System.out.print("\n");
+	}
 
+	public static void main(String[] args) {
+		String input = "abc";
+		BitSet bits = MessageParser.parse(input);
+		printBlock(bits);
 	}
 
 }
