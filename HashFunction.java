@@ -5,23 +5,22 @@ import java.util.BitSet;
 public class HashFunction {
 
 	/*
-	 * 
-	 * public String toBinary(String message) { StringBuilder binary = new
-	 * StringBuilder(); for(int i = 0; i < message.length(); i++) { String binChar =
-	 * 0 + Integer.toBinaryString((int)message.charAt(i)); while(binChar.length() <
-	 * 8) binChar = 0 + binChar; binary.append(binChar); } return pad(binary); }
+	 * Heavily a work in progress!!
 	 * 
 	 * 
-	 * 
-	 * 
-	 * Double result = (Math.sqrt(primes[i]) % 1) * Math.pow(2, 32); String data =
-	 * String.format("%.0f", Math.floor(result)); String bits =
-	 * Long.toBinaryString(Long.parseLong(data));
-	 */
-
-	/*
-	 * 1. Get input string
-	 * 
+	 * 1. message to binary
+	 * 2. add a one to the end to signify message end
+	 * 3. pad with zeros to a multiple 512 bits - 64 bits for the length (Integer)
+	 * 4. cut into blocks of 512 (message block)
+	 * 5. cut each block into a message schedule (16 words 32 bits each)
+	 * 6. propagate words with functions to convert the schedule to 64 words
+	 * 7. compression component of the hash function (state registers- the sqrt of the first 8 primes)
+	 * 8. for each word in the message schedule, take it and its corresponding constant 
+	 * 		using these two words and the state registers, create the two temp words
+	 * 9. compress the temporary words into the register, and move to the next message word
+	 * 10. add the current state register to the original state register
+	 * 11. if there are additional message blocks, use the result as the initial state register and repeat
+	 * 12. convert each of the 8 final words to hexadecimal and concatenate them to get the final hash
 	 * 
 	 */
 
@@ -35,47 +34,33 @@ public class HashFunction {
 				199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311 };
 	}
 
-	public static BitSet primeConstant(int index) {
+	public Word primeConstant(int index) {
 		// long equal to 2^32 used to scale the constant to ~32 bits
 		long scale = 1L << 32;
-		// get the cube root result ignoring digits left of the decimal
-		double cbrt = (Math.cbrt(primes()[index]) % 1) * scale;
-		// get the binary string of the scaled cube root
-		String binaryString = Long.toBinaryString((long) cbrt);
-		BitSet bits = new BitSet(32);
-		int numBits = binaryString.length();
-		// fill the bit set using the binary string
-		for (int i = 0; i < numBits; i++) {
-			if (binaryString.charAt((numBits - 1) - i) == '1') {
-				bits.set(31 - i);
-			}
-		}
-		return bits;
+		// get the root result, modulus one to make any digits left of the decimal 0
+		double root = (Math.cbrt(primes()[index]) % 1) * scale;
+		// convert the double to a long and create a BitSet with it
+		return new Word((long) root);
 	}
 
 	public static void main(String[] args) {
-		String input = "test";
-		print(primeConstant(0));
-
-	}
-
-	public static void print(BitSet bits) {
-		for (int i = 0; i < 32; i++) {
+		String input = "abc";
+		BitSet bits = new BitSet(input.length() * 8);
+		char[] chars = input.toCharArray();
+		for (int i = 0; i < chars.length; i++) {
+			String charStr = Integer.toBinaryString(Integer.valueOf(chars[i]));
+			for (int j = 0; j < 8; j++) {
+				int zeroes = 8 - charStr.length(); // 3
+				if ((j >= zeroes) && (charStr.charAt(j - zeroes) == '1')) {
+					bits.set((i * 8) + j);
+				}
+			}
+		}
+		for (int i = 0; i < input.length() * 8; i++) {
 			boolean val = bits.get(i);
 			System.out.print(val ? 1 : 0);
 		}
-	}
-
-	private class Word {
-		public BitSet bits;
-
-		public Word(String s) {
-			bits = new BitSet(32);
-//			for (char c : s.toCharArray()) {
-//				String bString = Integer.toBinaryString(c);
-//			}
-
-		}
+		System.out.print("\n");
 
 	}
 
