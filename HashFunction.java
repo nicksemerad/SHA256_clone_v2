@@ -28,6 +28,8 @@ public class HashFunction {
 	 * 
 	 * 6. propagate words with functions to get the full schedule of 64 words
 	 * 
+	 * word 16: w0 + σ0(w1) + w9 + σ1(w14)
+	 * 
 	 * 
 	 * 7. compression component of the hash function (state registers- the sqrt of
 	 * the first 8 primes)
@@ -53,93 +55,22 @@ public class HashFunction {
 
 	}
 
-	private static short primes(int index) {
-		short[] arr = new short[] { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79,
-				83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191,
-				193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307,
-				311 };
-		return arr[index];
-	}
-
-	/**
-	 * Converts a root as a double value into a binary string. First the root value
-	 * modulus 1 is taken. This is done to isolate the fraction portion of the root.
-	 * The fraction is then multiplied by the scale which is 2^32. This gives us an
-	 * integer that is equal to or less than 32 bits of information.
-	 * 
-	 * @param root
-	 * @return
-	 */
-	public static String getRootBinaryString(double root) {
-		long scale = 1L << 32;
-		root = (root % 1) * scale;
-		return Long.toBinaryString((long) root);
-	}
-
-	/**
-	 * Returns the bits of the constant at the provided index. Constants are the
-	 * cube roots of prime numbers that are operated on to get 32 bits that appear
-	 * random, but are not. The constants are used to compress the input message
-	 * into the hash register.
-	 * 
-	 * @param index
-	 * @return
-	 */
-	public static BitSet getConstant(int index) {
-		double root = Math.cbrt(primes(index));
-		return stringToBits(getRootBinaryString(root));
-	}
-
-	/**
-	 * Calculates and returns the hash register, which is what the entire message is
-	 * compressed into. This method only gets the initial register before any
-	 * compression has happened. The initial register has 8 words of 32 bits each.
-	 * Each word is the square root of the first 8 prime numbers, once they have
-	 * been operated on to get the 32 bits of information.
-	 * 
-	 * @return
-	 */
-	public static BitSet getRegister() {
-		BitSet register = new BitSet(256);
-		for (int i = 0; i < 8; i++) {
-			String s = getRootBinaryString(Math.sqrt(primes(i)));
-			for (int j = 0; j < s.length(); j++) {
-				if (s.charAt(s.length() - (1 + j)) == '1') {
-					int idx = ((i + 1) * 32) - (1 + j);
-					register.set(idx);
-				}
-			}
-		}
-		return register;
-	}
-
-	public static BitSet stringToBits(String binaryString) {
-		String s = binaryString;
-		BitSet bits = new BitSet(32);
-		for (int i = 0; i < s.length(); i++) {
-			if (s.charAt(s.length() - (1 + i)) == '1') {
-				bits.set(32 - (1 + i));
-			}
-		}
-		return bits;
-	}
-
-	public void propogateMessage(BitSet message) {
-
-	}
-
 	public static void main(String[] args) {
 		String input = "abc";
-		BitSet bits = MessageParser.parse(input);
-//		printBlock(bits);
+		HashRegister register = new HashRegister(input);
 
-//		printBits(primeConstant(0), 32);
-//		printBits(getConstant(0), 32);
-		BitSet reg = getRegister();
-		printWords(reg);
 	}
 
-	private static void printBits(BitSet bits, int size) {
+
+	private static void printArr(BitSet[] arr) {
+		for (BitSet bits : arr) {
+			if (bits != null) {
+				printBits(bits, 32);
+			}
+		}
+	}
+
+	public static void printBits(BitSet bits, int size) {
 		for (int i = 0; i < size; i++) {
 			boolean val = bits.get(i);
 			System.out.print(val ? 1 : 0);
@@ -147,7 +78,7 @@ public class HashFunction {
 		System.out.print("\n");
 	}
 
-	private static void printWords(BitSet bits) {
+	public static void printWords(BitSet bits) {
 		int words = Math.ceilDiv(bits.length(), 32);
 		for (int i = 0; i < words; i++) {
 			int idx = i * 32;
