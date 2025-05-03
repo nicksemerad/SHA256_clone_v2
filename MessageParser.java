@@ -14,40 +14,6 @@ import java.util.BitSet;
 public class MessageParser {
 
 	/**
-	 * Returns the number of bits the final message will be.
-	 * 
-	 * @param input
-	 * @return
-	 */
-	public static int messageSize(int inputLength) {
-		int sum = inputLength;
-		int additionalBits = sum - (sum % 512);
-		return 512 + additionalBits;
-	}
-
-	/**
-	 * Converts the input string into binary and uses it to construct a BitSet. The
-	 * end of the input string binary is marked by a single 1 called the separator.
-	 * 
-	 * @param input
-	 * @return
-	 */
-	private static BitSet stringToBits(String input) {
-		BitSet bits = new BitSet(input.length() * 8);
-		for (int i = 0; i < input.length(); i++) {
-			String charStr = Integer.toBinaryString(input.charAt(i));
-			for (int j = 0; j < 8; j++) {
-				int zeroes = 8 - charStr.length();
-				if ((j >= zeroes) && (charStr.charAt(j - zeroes) == '1')) {
-					bits.set((i * 8) + j);
-				}
-			}
-		}
-		bits.set(input.length() * 8);
-		return bits;
-	}
-
-	/**
 	 * Parses an input string into a message of bits.
 	 * 
 	 * @param input
@@ -63,6 +29,41 @@ public class MessageParser {
 			}
 		}
 		return bits;
+	}
+
+	/**
+	 * Converts the input string into binary and uses it to construct a BitSet. The
+	 * end of the input string binary is marked by a single 1 called the separator.
+	 * 
+	 * @param input
+	 * @return
+	 */
+	private static BitSet stringToBits(String input) {
+		int bitsLength = input.length() * 8;
+		BitSet bits = new BitSet(bitsLength);
+		for (int i = 0; i < input.length(); i++) {
+			String charStr = Integer.toBinaryString(input.charAt(i));
+			for (int j = 0; j < 8; j++) {
+				int zeroes = 8 - charStr.length();
+				if ((j >= zeroes) && (charStr.charAt(j - zeroes) == '1')) {
+					bits.set((i * 8) + j);
+				}
+			}
+		}
+		// add the separator
+		bits.set(bitsLength);
+		return bits;
+	}
+	
+	/**
+	 * Returns the number of bits the final message will be.
+	 * 
+	 * @param length
+	 * @return
+	 */
+	public static int messageSize(int length) {
+		int additionalBits = length - (length % 512);
+		return 512 + additionalBits;
 	}
 
 }

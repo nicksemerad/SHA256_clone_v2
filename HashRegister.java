@@ -1,7 +1,6 @@
 package nicks_hash_function;
 
 import java.util.BitSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
@@ -10,7 +9,7 @@ import java.util.LinkedList;
 public class HashRegister {
 	private static long scale;
 	private static short[] primes;
-	private LinkedList<BitSet> tempRegister;
+	private LinkedList<BitSet> hashRegister;
 
 	public HashRegister(String input) {
 		scale = 1L << 32;
@@ -19,7 +18,7 @@ public class HashRegister {
 				197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311 };
 		initRegister();
 		compressBlocks(MessageParser.parse(input));
-		HashFunction.printList(tempRegister);
+		HashFunction.printList(hashRegister);
 	}
 
 	/**
@@ -32,11 +31,11 @@ public class HashRegister {
 	 * @return
 	 */
 	public void initRegister() {
-		tempRegister = new LinkedList<BitSet>();
+		hashRegister = new LinkedList<BitSet>();
 		for (int i = 0; i < 8; i++) {
 			String s = getRootBinaryString(Math.sqrt(primes[i]));
 			BitSet bs = stringToBits(s);
-			tempRegister.addLast(bs);
+			hashRegister.addLast(bs);
 		}
 	}
 
@@ -61,31 +60,56 @@ public class HashRegister {
 	 */
 	public void compress(Block block) {
 		for(int i = 0; i < 64; i++) {
-			updateRegister(block, getConstant(i), block.words[i]);
+			BitSet[] register = hashRegister.toArray(new BitSet[0]);
+			BitSet t1 = t1(register, getConstant(i), block.words[i]);
+			BitSet t2 = t2(register);
+			updateRegister(add(t1, t2), add(t1, register[3]));
 		}
 	}
 	
 	/**
 	 * 
-	 * @param block
-	 * @param indexWords
+	 * 
+	 * @param register
+	 * @param constant
+	 * @param schedule
+	 * @return
 	 */
-	public void updateRegister(Block block, BitSet constant, BitSet schedule) {
-		Iterator<BitSet> itr = tempRegister.iterator();
-		BitSet[] r = new BitSet[8];
-		for(int i = 0; i < 8; i++) {
-			r[i] = itr.next();
-		}
-		BitSet T1 = add(Σ1(r[4]), choice(r[4], r[5], r[6]));
-		T1 = add(T1, r[7]);
-		T1 = add(T1, schedule);
-		T1 = add(T1, constant);
-		BitSet T2 = add(Σ0(r[0]), majority(r[0], r[1], r[2]));
-		
-
-		tempRegister.addFirst(add(T1, T2));
-		tempRegister.set(4, add(tempRegister.get(4), T1));
-		tempRegister.removeLast();
+	public BitSet t1(BitSet[] register, BitSet constant, BitSet schedule) {
+		BitSet[] components = new BitSet[] {
+				Σ1(register[4]),
+				choice(register[4], register[5], register[6]),
+				register[7],
+				schedule,
+				constant
+		};
+		return add(components);
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param register
+	 * @return
+	 */
+	public BitSet t2(BitSet[] register) {
+		BitSet[] components = new BitSet[] {
+				Σ0(register[0]),
+				majority(register[0], register[1], register[2])
+		};
+		return add(components);
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param newWord
+	 * @param updatedWord
+	 */
+	public void updateRegister(BitSet newWord, BitSet updatedWord) {
+		hashRegister.addFirst(newWord);
+		hashRegister.set(4, updatedWord);
+		hashRegister.removeLast();
 	}
 
 	/**
@@ -234,16 +258,15 @@ public class HashRegister {
 	/**
 	 * Adds an array of BitSets.
 	 * 
-	 * @param setOne
-	 * @param setTwo
+	 * @param sets
 	 * @return
 	 */
 	public static BitSet add(BitSet[] sets) {
-		long sum = 0L;
-		for(int i = 0; i < sets.length; i++) {
-			sum+=bitsToLong(sets[i]);
+		BitSet sum = sets[0];
+		for(int i = 1; i < sets.length; i++) {
+			sum = add(sum, sets[i]);
 		}
-		return stringToBits(Long.toBinaryString(sum % scale));
+		return sum;
 	}
 
 	/**
@@ -326,6 +349,31 @@ public class HashRegister {
 		return ((valOne ? 1 : 0) + (valTwo ? 1 : 0) + (valThree ? 1 : 0)) > 1;
 	}
 
+	
+	private class Message {
+		public Block[] blocks;
+		
+		public Message(BitSet message) {
+			parseBlocks(message);
+
+		}
+		
+		public void parseBlocks(BitSet message) {
+			int size = (message.length() / 512) + 1;
+			blocks = new Block[size];
+			for (int i = 0; i < size; i++) {
+				blocks[i] = new Block(message.get(i * 512, (i + 1) * 512));
+				blocks[i].propogate();
+			}
+		}
+		
+		public void propogateBlocks() {
+			for(int i = 0; i < blocks.length; i++) {
+				blocks[i].propogate();
+			}
+		}
+	}
+	
 	/**
 	 * 
 	 */
@@ -345,18 +393,17 @@ public class HashRegister {
 
 		/**
 		 * Propagates a message block from 16 words (512 bits) to 64 words (2048 bits)
-		 * 
-		 * @param m
 		 */
 		public void propogate() {
 			for (int i = 16; i < 64; i++) {
-				BitSet word0 = words[i - 16];
-				BitSet word1 = σ0(words[i - 15]);
-				BitSet word9 = words[i - 7];
-				BitSet word14 = σ1(words[i - 2]);
-				words[i] = add(new BitSet[] {word0, word1, word9, word14});
+				BitSet[] components = new BitSet[] {
+						words[i - 16], 
+						σ0(words[i - 15]), 
+						words[i - 7], 
+						σ1(words[i - 2])
+				};
+				words[i] = add(components);
 			}
-//			HashFunction.printBits(words[63], 32);
 		}
 	}
 }

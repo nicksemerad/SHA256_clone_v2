@@ -46,10 +46,6 @@ public class HashFunction {
 	 * 
 	 */
 
-	public HashFunction(int index) {
-
-	}
-
 	public static void main(String[] args) {
 		String input = "abc";
 		HashRegister register = new HashRegister(input);
