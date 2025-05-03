@@ -2,6 +2,7 @@ package nicks_hash_function;
 
 import java.util.BitSet;
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 /**
  * 
@@ -9,7 +10,7 @@ import java.util.LinkedList;
 public class HashRegister {
 	private static long scale;
 	private static short[] primes;
-	private LinkedList<BitSet> hashRegister;
+	private LinkedList<BitSet> register;
 
 	public HashRegister(String input) {
 		scale = 1L << 32;
@@ -17,8 +18,12 @@ public class HashRegister {
 				89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193,
 				197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311 };
 		initRegister();
-		compressBlocks(MessageParser.parse(input));
-		HashFunction.printList(hashRegister);
+		compress(MessageParser.parse(input));
+//		HashFunction.printList(register);
+//		System.out.println("-----------");
+////		compressBlocks(MessageParser.parse(input));
+////		HashFunction.printList(register);
+//		System.out.println(hash());
 	}
 
 	/**
@@ -31,11 +36,11 @@ public class HashRegister {
 	 * @return
 	 */
 	public void initRegister() {
-		hashRegister = new LinkedList<BitSet>();
+		register = new LinkedList<BitSet>();
 		for (int i = 0; i < 8; i++) {
 			String s = getRootBinaryString(Math.sqrt(primes[i]));
 			BitSet bs = stringToBits(s);
-			hashRegister.addLast(bs);
+			register.addLast(bs);
 		}
 	}
 
@@ -44,29 +49,44 @@ public class HashRegister {
 	 * 
 	 * @param message
 	 */
-	public void compressBlocks(BitSet message) {
-		int numBlocks = MessageParser.messageSize(message.length()) / 512;
-		for(int i = 0; i < numBlocks; i++) {
-			Block block = new Block(message.get(i * 512, (i + 1) * 512));
-			block.propogate();
-			compress(block);
+	public void compress(BitSet messageBits) {
+		Message message = new Message(messageBits);
+		for(int i = 0; i < message.size; i++) {
+			BitSet[] initialRegister = register.toArray(new BitSet[0]);
+			compressBlock(message.blocks[i]);
+			combine(initialRegister);
 		}
 	}
 	
+	/**
+	 * Combines the hash register before the message block compression with the hash 
+	 * register after.
+	 * 
+	 * @param initialRegister
+	 */
+	public void combine(BitSet[] initialRegister) {
+		ListIterator<BitSet> iter = register.listIterator();
+		while(iter.hasNext()) {
+			BitSet initalWord = initialRegister[iter.nextIndex()];
+			BitSet resultWord = iter.next();
+			iter.set(add(initalWord, resultWord));
+		}
+	}
+
 	/**
 	 * Compresses a given block into the register.
 	 * 
 	 * @param block
 	 */
-	public void compress(Block block) {
-		for(int i = 0; i < 64; i++) {
-			BitSet[] register = hashRegister.toArray(new BitSet[0]);
-			BitSet t1 = t1(register, getConstant(i), block.words[i]);
-			BitSet t2 = t2(register);
-			updateRegister(add(t1, t2), add(t1, register[3]));
+	public void compressBlock(Block block) {
+		for (int i = 0; i < 64; i++) {
+			BitSet[] registerArray = register.toArray(new BitSet[0]);
+			BitSet t1 = t1(registerArray, getConstant(i), block.words[i]);
+			BitSet t2 = t2(registerArray);
+			updateRegister(add(t1, t2), add(t1, registerArray[3]));
 		}
 	}
-	
+
 	/**
 	 * 
 	 * 
@@ -76,16 +96,15 @@ public class HashRegister {
 	 * @return
 	 */
 	public BitSet t1(BitSet[] register, BitSet constant, BitSet schedule) {
-		BitSet[] components = new BitSet[] {
-				Σ1(register[4]),
+		BitSet[] components = new BitSet[] { 
+				Σ1(register[4]), 
 				choice(register[4], register[5], register[6]),
-				register[7],
-				schedule,
-				constant
+				register[7], 
+				schedule, constant 
 		};
 		return add(components);
 	}
-	
+
 	/**
 	 * 
 	 * 
@@ -93,13 +112,13 @@ public class HashRegister {
 	 * @return
 	 */
 	public BitSet t2(BitSet[] register) {
-		BitSet[] components = new BitSet[] {
-				Σ0(register[0]),
-				majority(register[0], register[1], register[2])
+		BitSet[] components = new BitSet[] { 
+				Σ0(register[0]), 
+				majority(register[0], register[1], register[2]) 
 		};
 		return add(components);
 	}
-	
+
 	/**
 	 * 
 	 * 
@@ -107,9 +126,19 @@ public class HashRegister {
 	 * @param updatedWord
 	 */
 	public void updateRegister(BitSet newWord, BitSet updatedWord) {
-		hashRegister.addFirst(newWord);
-		hashRegister.set(4, updatedWord);
-		hashRegister.removeLast();
+		register.addFirst(newWord);
+		register.set(4, updatedWord);
+		register.removeLast();
+	}
+	
+	public String hash() {
+		StringBuilder hash = new StringBuilder();
+		ListIterator<BitSet> iter = register.listIterator();
+		while(iter.hasNext()) {
+			long wordValue = bitsToLong(iter.next());
+			hash.append(Long.toHexString(wordValue));
+		}
+		return hash.toString();
 	}
 
 	/**
@@ -254,7 +283,7 @@ public class HashRegister {
 		long sum = bitsToLong(setOne) + bitsToLong(setTwo);
 		return stringToBits(Long.toBinaryString(sum % scale));
 	}
-	
+
 	/**
 	 * Adds an array of BitSets.
 	 * 
@@ -263,7 +292,7 @@ public class HashRegister {
 	 */
 	public static BitSet add(BitSet[] sets) {
 		BitSet sum = sets[0];
-		for(int i = 1; i < sets.length; i++) {
+		for (int i = 1; i < sets.length; i++) {
 			sum = add(sum, sets[i]);
 		}
 		return sum;
@@ -349,31 +378,30 @@ public class HashRegister {
 		return ((valOne ? 1 : 0) + (valTwo ? 1 : 0) + (valThree ? 1 : 0)) > 1;
 	}
 
-	
 	private class Message {
 		public Block[] blocks;
-		
+		public int size;
+
 		public Message(BitSet message) {
 			parseBlocks(message);
-
+			propogateBlocks();
 		}
-		
+
 		public void parseBlocks(BitSet message) {
-			int size = (message.length() / 512) + 1;
+			size = (message.length() / 512) + 1;
 			blocks = new Block[size];
 			for (int i = 0; i < size; i++) {
 				blocks[i] = new Block(message.get(i * 512, (i + 1) * 512));
-				blocks[i].propogate();
 			}
 		}
-		
+
 		public void propogateBlocks() {
-			for(int i = 0; i < blocks.length; i++) {
+			for (int i = 0; i < blocks.length; i++) {
 				blocks[i].propogate();
 			}
 		}
 	}
-	
+
 	/**
 	 * 
 	 */
@@ -396,11 +424,11 @@ public class HashRegister {
 		 */
 		public void propogate() {
 			for (int i = 16; i < 64; i++) {
-				BitSet[] components = new BitSet[] {
+				BitSet[] components = new BitSet[] { 
 						words[i - 16], 
 						σ0(words[i - 15]), 
 						words[i - 7], 
-						σ1(words[i - 2])
+						σ1(words[i - 2]) 
 				};
 				words[i] = add(components);
 			}

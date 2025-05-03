@@ -3,13 +3,18 @@ package nicks_hash_function;
 import java.util.BitSet;
 
 /**
- * Provides functionality to take an input string and parse it into a message. A
- * message begins with the string in binary followed by a single 1 bit to mark
- * the end called the separator. The size of the binary for the string input is
- * stored in the last 64 bits of the message. Between the separator and the size
- * of the original message there are a number of zeroes called the padding.
- * These padding zeroes are added until the entire message has a number of bits
- * that is a multiple of 512.
+ * Parses an input string into a message. A message is a set of bits (0s or 1s)
+ * that stores information about the input string. Every message has a length
+ * that is divisible by 512 so it can always be broken down into 512 bit blocks.
+ * 
+ * A message begins with the string in binary. A separator is added to the end,
+ * which is just a single 1 bit. This is followed by 0s which pad the message to
+ * make sure the final length is a multiple of 512 bits. The padding continues
+ * until there are only 64 bits left to hit its final size. (i.e. a message with
+ * 512 bits will be padded from the separator to bit 448.) These last 64 bits
+ * are reserved for the number of bits in the input string binary.
+ * 
+ * [input in binary][1][0000000000][size]
  */
 public class MessageParser {
 
@@ -54,7 +59,7 @@ public class MessageParser {
 		bits.set(bitsLength);
 		return bits;
 	}
-	
+
 	/**
 	 * Returns the number of bits the final message will be.
 	 * 
