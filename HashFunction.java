@@ -3,6 +3,7 @@ package nicks_hash_function;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 public class HashFunction {
 
@@ -21,6 +22,8 @@ public class HashFunction {
 	 * as it would prevent needing to re-reverse them when converting them back to
 	 * longs for the add() methods
 	 * 
+	 * 	- add check for message size and split to a new block after 504 character bits (64 chars)
+	 * 
 	 */
 
 	public static void main(String[] args) {
@@ -30,22 +33,22 @@ public class HashFunction {
 
 	}
 
-	public static void printList(LinkedList<BitSet> list) {
+	public static void print(LinkedList<BitSet> list) {
 		Iterator<BitSet> itr = list.iterator();
 		while (itr.hasNext()) {
-			printBits(itr.next(), 32);
+			print(itr.next(), 32);
 		}
 	}
 
-	public static void printArr(BitSet[] arr) {
+	public static void print(BitSet[] arr) {
 		for (BitSet bits : arr) {
 			if (bits != null) {
-				printBits(bits, 32);
+				print(bits, 32);
 			}
 		}
 	}
 
-	public static void printBits(BitSet bits, int size) {
+	public static void print(BitSet bits, int size) {
 		for (int i = 0; i < size; i++) {
 			boolean val = bits.get(i);
 			System.out.print(val ? 1 : 0);
@@ -53,12 +56,13 @@ public class HashFunction {
 		System.out.print("\n");
 	}
 
-	public static void printWords(BitSet bits) {
+	public static void print(BitSet bits) {
 		int words = Math.ceilDiv(bits.length(), 32);
 		for (int i = 0; i < words; i++) {
 			int idx = i * 32;
-			printBits(bits.get(idx, idx + 32), 32);
+			print(bits.get(idx, idx + 32), 32);
 		}
 		System.out.print("\n");
 	}
+	
 }

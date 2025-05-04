@@ -26,6 +26,16 @@ public class Message extends BitOperations {
 	}
 
 	/**
+	 * Makes a new empty Message with a given size.
+	 * 
+	 * @param size
+	 */
+	public Message(int size) {
+		blocks = new Block[size];
+		size = 0;
+	}
+
+	/**
 	 * Parses the message blocks into block objects and places them in the message's
 	 * block array.
 	 * 
@@ -40,12 +50,15 @@ public class Message extends BitOperations {
 	}
 
 	/**
-	 * Returns the number of blocks in this message.
+	 * Makes a new block with the provided BitSet[] and places it in the blocks
+	 * array at the first open index.
 	 * 
-	 * @return
+	 * @param words
 	 */
-	public int size() {
-		return size;
+	public void addBlock(BitSet[] words) {
+		Block newBlock = new Block(words);
+		blocks[size] = newBlock;
+		size++;
 	}
 
 	/**
@@ -68,6 +81,16 @@ public class Message extends BitOperations {
 	}
 
 	/**
+	 * Returns the number of blocks in this message. Note: not the length of the
+	 * blocks array.
+	 * 
+	 * @return
+	 */
+	public int size() {
+		return size;
+	}
+
+	/**
 	 * This class represents a single 512 bit block as an array of BitSets to make
 	 * operations easier.
 	 */
@@ -84,6 +107,15 @@ public class Message extends BitOperations {
 			for (int i = 0; i < 16; i++) {
 				words[i] = blockBits.get((i * 32), ((i + 1) * 32));
 			}
+		}
+
+		/**
+		 * Constructs a new block with the provided BitSet array.
+		 * 
+		 * @param words
+		 */
+		public Block(BitSet[] words) {
+			this.words = words;
 		}
 
 		/**

@@ -18,7 +18,7 @@ public class HashRegister extends BitOperations {
 	public HashRegister(String input) {
 		initRegister();
 		compress(MessageParser.parse(input));
-//		HashFunction.printList(register);
+//		HashFunction.print(register);
 		System.out.println(hash());
 	}
 
@@ -34,9 +34,7 @@ public class HashRegister extends BitOperations {
 	public void initRegister() {
 		register = new LinkedList<BitSet>();
 		for (int i = 0; i < 8; i++) {
-			String s = getRootBinaryString(Math.sqrt(getPrime(i)));
-			BitSet bs = stringToBits(s);
-			register.addLast(bs);
+			register.addLast(getInitialRegister(i));			
 		}
 	}
 
@@ -96,7 +94,8 @@ public class HashRegister extends BitOperations {
 				Σ1(register[4]), 
 				choice(register[4], register[5], register[6]),
 				register[7], 
-				schedule, constant 
+				schedule, 
+				constant 
 		};
 		return add(components);
 	}

@@ -71,4 +71,95 @@ public class MessageParser {
 		return 512 + additionalBits;
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
+	public static BitSet[] generateBlock() {
+		BitSet[] block = new BitSet[64];
+		for (int i = 0; i < 64; i++) {
+			block[i] = new BitSet();
+			block[i].set(31, false);
+		}
+		return block;
+	}
+
+	/**
+	 * 
+	 * 
+	 * @param input
+	 */
+	public static void test(String input) {
+		BitSet[] block = generateBlock();
+		convertInput(block, input);
+		seperate(block, input.length());
+		convertSize(block, input.length() << 3);
+		
+		
+//		block[input.length() / 4].set(input.length() << 3 % 32); // separator
+		HashFunction.print(block[0]);	
+		HashFunction.print(block[1]);	
+		HashFunction.print(block[15]);
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param block
+	 * @param input
+	 */
+	public static void convertInput(BitSet[] block, String input) {
+		for (int i = 0; i < input.length(); i++) {
+			String chr = Integer.toBinaryString(input.charAt(i));
+			int start = (i * 8) % 32;
+			start += 8 - chr.length(); // offset for leading 0s
+			for (int j = 0; j < chr.length(); j++) {
+				if (chr.charAt(j) == '1') {
+					block[i / 4].set(start + j);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param block
+	 * @param length
+	 */
+	public static void seperate(BitSet[] block, int length) {
+		int bits = length << 3; // 8 bits per bite
+		block[length >> 2].set(bits % 32);
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param block
+	 * @param bitCount
+	 */
+	public static void convertSize(BitSet[] block, int bitCount) {
+		String sizeBinary = Integer.toBinaryString(bitCount);
+		int start = 64 - sizeBinary.length();
+		for (int i = 0; i < sizeBinary.length(); i++) {
+			start += i;
+			if (sizeBinary.charAt(i) == '1') {
+				int blockIdx = 14 + (start / 32); // BitSet in the block
+				int idx = start % 32; // index in the BitSet
+				block[blockIdx].set(idx);
+			}
+		}
+	}
+	
+
+	public static void main(String[] args) {
+		String input = "abcdef";
+		test(input);
+//		System.out.println();
+//		BitSet res = parse(input);
+//		HashFunction.print(res);
+//		HashFunction.print(res.get(480, 512));
+
+	}
+
 }
