@@ -47,9 +47,9 @@ public class HashRegister extends BitOperations {
 	 */
 	public void compress(BitSet messageBits) {
 		Message message = new Message(messageBits);
-		for (int i = 0; i < message.size; i++) {
+		for (int i = 0; i < message.size(); i++) {
 			BitSet[] initialRegister = register.toArray(new BitSet[0]);
-			compressBlock(message.blocks[i]);
+			compressBlock(message.getBlock(i));
 			combine(initialRegister);
 		}
 	}
@@ -59,10 +59,10 @@ public class HashRegister extends BitOperations {
 	 * 
 	 * @param block
 	 */
-	public void compressBlock(Block block) {
+	public void compressBlock(BitSet[] block) {
 		for (int i = 0; i < 64; i++) {
 			BitSet[] registerArray = register.toArray(new BitSet[0]);
-			BitSet t1 = t1(registerArray, getConstant(i), block.words[i]);
+			BitSet t1 = t1(registerArray, getConstant(i), block[i]);
 			BitSet t2 = t2(registerArray);
 			updateRegister(add(t1, t2), add(t1, registerArray[3]));
 		}
@@ -82,7 +82,7 @@ public class HashRegister extends BitOperations {
 			iter.set(add(initalWord, resultWord));
 		}
 	}
-	
+
 	/**
 	 * Calculates the first temporary word used in compression.
 	 * 
@@ -144,80 +144,4 @@ public class HashRegister extends BitOperations {
 		return hash.toString();
 	}
 
-	/**
-	 * This class represents the input message cut up into 512 bit blocks, 
-	 * each of which are propagated to prepare them for compression.
-	 */
-	private class Message {
-		public Block[] blocks;
-		public int size;
-
-		/**
-		 * Makes a new Message by parsing the blocks and propagating them.
-		 * 
-		 * @param message
-		 */
-		public Message(BitSet message) {
-			parseBlocks(message);
-			propogateBlocks();
-		}
-
-		/**
-		 * Parses the message blocks into block objects and places them 
-		 * in the message's block array.
-		 * 
-		 * @param message
-		 */
-		public void parseBlocks(BitSet message) {
-			size = (message.length() / 512) + 1;
-			blocks = new Block[size];
-			for (int i = 0; i < size; i++) {
-				blocks[i] = new Block(message.get(i * 512, (i + 1) * 512));
-			}
-		}
-
-		/**
-		 * Propagates each of the message blocks to prepare them for 
-		 * compression.
-		 */
-		public void propogateBlocks() {
-			for (int i = 0; i < blocks.length; i++) {
-				blocks[i].propogate();
-			}
-		}
-	}
-
-	/**
-	 * This class represents a single 512 bit block, which is an array of BitSets.
-	 */
-	private class Block {
-		public BitSet[] words;
-
-		/**
-		 * Constructs a new block with the provided BitSet.
-		 * 
-		 * @param blockBits
-		 */
-		public Block(BitSet blockBits) {
-			words = new BitSet[64];
-			for (int i = 0; i < 16; i++) {
-				words[i] = blockBits.get((i * 32), ((i + 1) * 32));
-			}
-		}
-
-		/**
-		 * Propagates a message block from 16 words (512 bits) to 64 words (2048 bits)
-		 */
-		public void propogate() {
-			for (int i = 16; i < 64; i++) {
-				BitSet[] components = new BitSet[] { 
-						words[i - 16], 
-						σ0(words[i - 15]), 
-						words[i - 7], 
-						σ1(words[i - 2]) 
-				};
-				words[i] = add(components);
-			}
-		}
-	}
 }

@@ -9,8 +9,17 @@ public class HashFunction {
 	/*
 	 * Heavily a work in progress!!
 	 * 
-	 * note: we have finished making a working SHA256 clone, now its time to
-	 * optimize this much further
+	 * note: Currently working on optimizing code organization and running time
+	 * efficiency
+	 * 
+	 * TODO:
+	 * 
+	 * 1. make the message parser parse into Message & Blocks instead of that
+	 * happening later in the HashRegister class
+	 * 
+	 * 2. change the parser and all methods to work with the BitSets being reversed,
+	 * as it would prevent needing to re-reverse them when converting them back to
+	 * longs for the add() methods
 	 * 
 	 */
 

@@ -10,7 +10,7 @@ public class BitOperations {
 	private static short[] primes;
 	
 	/**
-	 * Initialize the static variables.
+	 * Initialize the static variables. separate 
 	 */
 	public BitOperations() {
 		scale = 1L << 32;
