@@ -30,7 +30,7 @@ public class BitOperations {
 	 * @return
 	 */
 	public static BitSet getConstant(int index) {
-		return stringToBits(Integer.toBinaryString(constants[index]));
+		return binaryToBits(Integer.toBinaryString(constants[index]));
 	}
 
 	/**
@@ -42,7 +42,7 @@ public class BitOperations {
 	 * @return
 	 */
 	public static BitSet getInitialRegister(int index) {
-		return stringToBits(Integer.toBinaryString(initialRegister[index]));
+		return binaryToBits(Integer.toBinaryString(initialRegister[index]));
 	}
 
 	/**
@@ -137,7 +137,7 @@ public class BitOperations {
 	 */
 	public static BitSet add(BitSet setOne, BitSet setTwo) {
 		long sum = bitsToLong(setOne) + bitsToLong(setTwo);
-		return stringToBits(Long.toBinaryString(sum % (1L << 32)));
+		return binaryToBits(Long.toBinaryString(sum % (1L << 32)));
 	}
 
 	/**
@@ -202,7 +202,7 @@ public class BitOperations {
 	 * @param binaryString
 	 * @return
 	 */
-	public static BitSet stringToBits(String binaryString) {
+	public static BitSet binaryToBits(String binaryString) {
 		String s = binaryString;
 		BitSet bits = new BitSet(32);
 		for (int i = 0; i < s.length(); i++) {

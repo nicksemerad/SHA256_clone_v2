@@ -19,147 +19,75 @@ import java.util.BitSet;
 public class MessageParser {
 
 	/**
-	 * Parses an input string into a message of bits.
+	 * Returns the number of blocks the message will need.
 	 * 
 	 * @param input
 	 * @return
 	 */
-	public static BitSet parse(String input) {
-		BitSet bits = stringToBits(input);
-		int messageSize = messageSize(bits.length() + 64);
-		String size = Integer.toBinaryString(bits.length() - 1);
-		for (int i = 0; i < size.length(); i++) {
-			if (size.charAt(size.length() - (1 + i)) == '1') {
-				bits.set(messageSize - (1 + i));
-			}
-		}
-		return bits;
+	public static int blocksNeeded(String input) {
+		int inputBits = input.length() * 8;
+		inputBits++; // separator
+		inputBits += 64; // reserved for the message size
+		return (inputBits / 512) + 1;
 	}
 
 	/**
-	 * Converts the input string into binary and uses it to construct a BitSet. The
-	 * end of the input string binary is marked by a single 1 called the separator.
+	 * Builds the Message by breaking it into blocks.
 	 * 
 	 * @param input
 	 * @return
 	 */
-	private static BitSet stringToBits(String input) {
-		int bitsLength = input.length() * 8;
-		BitSet bits = new BitSet(bitsLength);
-		for (int i = 0; i < input.length(); i++) {
-			String charStr = Integer.toBinaryString(input.charAt(i));
-			for (int j = 0; j < 8; j++) {
-				int zeroes = 8 - charStr.length();
-				if ((j >= zeroes) && (charStr.charAt(j - zeroes) == '1')) {
-					bits.set((i * 8) + j);
-				}
-			}
-		}
-		// add the separator
-		bits.set(bitsLength);
-		return bits;
+	public static Message buildMessage(String input) {
+		Message message = new Message(blocksNeeded(input));
+		convertInput(message, input);
+		separate(message, input);
+		convertSize(message, input);
+		message.propogateBlocks();
+		return message;
 	}
 
 	/**
-	 * Returns the number of bits the final message will be.
+	 * Converts the input string into binary and adds it to the message block(s).
 	 * 
-	 * @param length
-	 * @return
-	 */
-	public static int messageSize(int length) {
-		int additionalBits = length - (length % 512);
-		return 512 + additionalBits;
-	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	public static BitSet[] generateBlock() {
-		BitSet[] block = new BitSet[64];
-		for (int i = 0; i < 64; i++) {
-			block[i] = new BitSet();
-			block[i].set(31, false);
-		}
-		return block;
-	}
-
-	/**
-	 * 
-	 * 
+	 * @param message
 	 * @param input
 	 */
-	public static void test(String input) {
-		BitSet[] block = generateBlock();
-		convertInput(block, input);
-		seperate(block, input.length());
-		convertSize(block, input.length() << 3);
-		
-		
-//		block[input.length() / 4].set(input.length() << 3 % 32); // separator
-		HashFunction.print(block[0]);	
-		HashFunction.print(block[1]);	
-		HashFunction.print(block[15]);
-	}
-	
-	/**
-	 * 
-	 * 
-	 * @param block
-	 * @param input
-	 */
-	public static void convertInput(BitSet[] block, String input) {
+	public static void convertInput(Message message, String input) {
 		for (int i = 0; i < input.length(); i++) {
 			String chr = Integer.toBinaryString(input.charAt(i));
-			int start = (i * 8) % 32;
-			start += 8 - chr.length(); // offset for leading 0s
+			int offset = 8 - chr.length();
 			for (int j = 0; j < chr.length(); j++) {
 				if (chr.charAt(j) == '1') {
-					block[i / 4].set(start + j);
+					message.setWordBit(i, offset + j);
 				}
 			}
 		}
 	}
-	
+
 	/**
+	 * Adds the separator to the message right after the input string binary.
 	 * 
-	 * 
-	 * @param block
-	 * @param length
+	 * @param message
+	 * @param input
 	 */
-	public static void seperate(BitSet[] block, int length) {
-		int bits = length << 3; // 8 bits per bite
-		block[length >> 2].set(bits % 32);
+	public static void separate(Message message, String input) {
+		message.setWordBit(input.length(), 0);
 	}
-	
+
 	/**
+	 * Converts the length of the input string binary into binary itself, and adds
+	 * it to the end of the message block.
 	 * 
-	 * 
-	 * @param block
-	 * @param bitCount
+	 * @param message
+	 * @param input
 	 */
-	public static void convertSize(BitSet[] block, int bitCount) {
-		String sizeBinary = Integer.toBinaryString(bitCount);
-		int start = 64 - sizeBinary.length();
-		for (int i = 0; i < sizeBinary.length(); i++) {
-			start += i;
-			if (sizeBinary.charAt(i) == '1') {
-				int blockIdx = 14 + (start / 32); // BitSet in the block
-				int idx = start % 32; // index in the BitSet
-				block[blockIdx].set(idx);
+	public static void convertSize(Message message, String input) {
+		String binary = Integer.toBinaryString(input.length() * 8);
+		for (int i = 0; i < binary.length(); i++) {
+			if (binary.charAt(i) == '1') {
+				message.setReservedBit((i + 64) - binary.length());
 			}
 		}
-	}
-	
-
-	public static void main(String[] args) {
-		String input = "abcdef";
-		test(input);
-//		System.out.println();
-//		BitSet res = parse(input);
-//		HashFunction.print(res);
-//		HashFunction.print(res.get(480, 512));
-
 	}
 
 }

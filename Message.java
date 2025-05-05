@@ -16,49 +16,25 @@ public class Message extends BitOperations {
 	private int size;
 
 	/**
-	 * Makes a new Message by parsing the blocks and propagating them.
-	 * 
-	 * @param message
-	 */
-	public Message(BitSet message) {
-		parseBlocks(message);
-		propogateBlocks();
-	}
-
-	/**
 	 * Makes a new empty Message with a given size.
 	 * 
 	 * @param size
 	 */
 	public Message(int size) {
 		blocks = new Block[size];
-		size = 0;
-	}
-
-	/**
-	 * Parses the message blocks into block objects and places them in the message's
-	 * block array.
-	 * 
-	 * @param message
-	 */
-	public void parseBlocks(BitSet message) {
-		size = (message.length() / 512) + 1;
-		blocks = new Block[size];
+		this.size = size;
 		for (int i = 0; i < size; i++) {
-			blocks[i] = new Block(message.get(i * 512, (i + 1) * 512));
+			blocks[i] = new Block();
 		}
 	}
 
 	/**
-	 * Makes a new block with the provided BitSet[] and places it in the blocks
-	 * array at the first open index.
-	 * 
-	 * @param words
+	 * Propagates each of the message blocks to prepare them for compression.
 	 */
-	public void addBlock(BitSet[] words) {
-		Block newBlock = new Block(words);
-		blocks[size] = newBlock;
-		size++;
+	public void propogateBlocks() {
+		for (int i = 0; i < blocks.length; i++) {
+			blocks[i].propogate();
+		}
 	}
 
 	/**
@@ -72,17 +48,46 @@ public class Message extends BitOperations {
 	}
 
 	/**
-	 * Propagates each of the message blocks to prepare them for compression.
+	 * Returns the word that a char at the provided index would fall in the message.
+	 * 
+	 * @param charIndex
+	 * @return
 	 */
-	public void propogateBlocks() {
-		for (int i = 0; i < blocks.length; i++) {
-			blocks[i].propogate();
-		}
+	public BitSet getWord(int charIndex) {
+		int block = charIndex / 64; // 64 chars per block
+		int word = (charIndex / 4) % 16; // 4 chars per word, 16 words/ block
+		return blocks[block].words[word];
 	}
 
 	/**
-	 * Returns the number of blocks in this message. Note: not the length of the
-	 * blocks array.
+	 * Sets a bit in the word that a char at the provided index would fall in the
+	 * message. Additionally takes in an offset value, which lets you set the value
+	 * of a bit that would fall within a specific char index binary.
+	 * 
+	 * @param charIndex
+	 * @param offset
+	 */
+	public void setWordBit(int charIndex, int offset) {
+		int bit = (charIndex % 4) * 8;
+		getWord(charIndex).set(bit + offset);
+	}
+
+	/**
+	 * Sets a bit in the reserved portion of the message that falls at a specific
+	 * index . The reserved portion is the last 2 words (64 bits) of the last block
+	 * that hold the binary representation of the number of bits the input message
+	 * takes up.
+	 * 
+	 * @param reservedIndex
+	 */
+	public void setReservedBit(int reservedIndex) {
+		Block block = blocks[size - 1];
+		BitSet word = reservedIndex < 31 ? block.words[14] : block.words[15];
+		word.set(reservedIndex % 32);
+	}
+
+	/**
+	 * Returns the number of blocks in this message.
 	 * 
 	 * @return
 	 */
@@ -98,24 +103,16 @@ public class Message extends BitOperations {
 		public BitSet[] words;
 
 		/**
-		 * Constructs a new block with the provided BitSet.
-		 * 
-		 * @param blockBits
-		 */
-		public Block(BitSet blockBits) {
-			words = new BitSet[64];
-			for (int i = 0; i < 16; i++) {
-				words[i] = blockBits.get((i * 32), ((i + 1) * 32));
-			}
-		}
-
-		/**
 		 * Constructs a new block with the provided BitSet array.
 		 * 
 		 * @param words
 		 */
-		public Block(BitSet[] words) {
-			this.words = words;
+		public Block() {
+			BitSet[] block = new BitSet[64];
+			for (int i = 0; i < 16; i++) {
+				block[i] = new BitSet();
+			}
+			words = block;
 		}
 
 		/**

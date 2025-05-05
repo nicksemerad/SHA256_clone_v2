@@ -16,10 +16,10 @@ public class HashRegister extends BitOperations {
 	 * @param input
 	 */
 	public HashRegister(String input) {
-		initRegister();
-		compress(MessageParser.parse(input));
+		initRegister();		
+		compress(MessageParser.buildMessage(input));
 //		HashFunction.print(register);
-		System.out.println(hash());
+//		System.out.println(hash());
 	}
 
 	/**
@@ -43,8 +43,7 @@ public class HashRegister extends BitOperations {
 	 * 
 	 * @param message
 	 */
-	public void compress(BitSet messageBits) {
-		Message message = new Message(messageBits);
+	public void compress(Message message) {
 		for (int i = 0; i < message.size(); i++) {
 			BitSet[] initialRegister = register.toArray(new BitSet[0]);
 			compressBlock(message.getBlock(i));

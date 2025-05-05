@@ -15,14 +15,10 @@ public class HashFunction {
 	 * 
 	 * TODO:
 	 * 
-	 * 1. make the message parser parse into Message & Blocks instead of that
-	 * happening later in the HashRegister class
-	 * 
-	 * 2. change the parser and all methods to work with the BitSets being reversed,
+	 * 1. change the parser and all methods to work with the BitSets being reversed,
 	 * as it would prevent needing to re-reverse them when converting them back to
 	 * longs for the add() methods
 	 * 
-	 * 	- add check for message size and split to a new block after 504 character bits (64 chars)
 	 * 
 	 */
 
@@ -63,6 +59,13 @@ public class HashFunction {
 			print(bits.get(idx, idx + 32), 32);
 		}
 		System.out.print("\n");
+	}
+	
+	public static void print(Message message) {
+		for(int i = 0; i < message.size(); i++) {
+			System.out.println("BLOCK " + i + ": ");
+			print(message.getBlock(0));
+		}
 	}
 	
 }
