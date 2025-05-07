@@ -25,8 +25,8 @@ public class HashFunction {
 	public static void main(String[] args) {
 		String input = "abc";
 		HashRegister register = new HashRegister(input);
-//		System.out.println(register.hash());
 
+		System.out.println(register.hash());
 	}
 
 	public static void print(LinkedList<BitSet> list) {

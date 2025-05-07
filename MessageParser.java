@@ -1,7 +1,5 @@
 package nicks_hash_function;
 
-import java.util.BitSet;
-
 /**
  * Parses an input string into a message. A message is a set of bits (0s or 1s)
  * that stores information about the input string. Every message has a length
@@ -89,5 +87,99 @@ public class MessageParser {
 			}
 		}
 	}
+	
+	public static void print(int[][] message) {
+		for (int i = 0; i < message.length; i++) {
+			for (int j = 0; j < 16; j++) {
+				System.out.println(Integer.toBinaryString(message[i][j]));
+			}
+		}
 
+	}
+
+	
+	
+	
+	public static char intVal(String s, int index) {
+		return index < s.length() ? s.charAt(index) : 0;
+	}
+
+	public static int[][] buildMessage2(String s) {
+		s += (char) 128;
+		int words = s.length() / 4 + 2;
+		int blocks = words / 16 + 1;
+		int[][] message = new int[blocks][];
+
+		for (int i = 0; i < blocks; i++) {
+			message[i] = new int[64];
+			for (int j = 0; j < 16; j++) {
+				int idx = i * 64 + j * 4;
+				message[i][j] = (intVal(s, idx) << 24) + (intVal(s, idx + 1) << 16) + (intVal(s, idx + 2) << 8)
+						+ (intVal(s, idx + 3) << 0);
+			}
+		}
+		long bits = (s.length() - 1) * 8;
+		long bitsHigh = bits >>> 32;
+		long bitsLow = bits % (2L << 32);
+
+		message[blocks - 1][14] = (int) bitsHigh;
+		message[blocks - 1][15] = (int) bitsLow;
+		return message;
+	}
+	
+	public static void propogate(int[][] message) {
+		for(int i = 0; i < message.length; i++) {
+			for(int j = 16; j < 64; j++) {
+				message[i][j] = 
+						message[i][j-16] + 
+						σ0(message[i][j-15]) + 
+						message[i][j-7] + 
+						σ1(message[i][j-2]);
+			}
+		}
+	}
+	
+	public static int rotr(int word, int rotations) {
+		int p1 = word >>> rotations;
+		int p2 = word << (32 - rotations);	
+		return p1 + p2;
+	}
+	
+	public static int σ0(int word) {
+		// rotr 7, rotr 18, shr 3 -> xor them all
+		return 0;
+	}
+	
+	public static int σ1(int word) {
+		// rotr 17, rotr 19, shr 10 -> xor them all
+		return 0;
+	}
+	public static int Σ0(int word) {
+		// rotr 2, rotr 13, rotr 22 -> xor them all
+		return 0;
+	}
+	public static int Σ1(int word) {
+		// rotr 6, rotr 11, rotr 25 -> xor them all
+		return 0;
+	}
+
+	public static void main(String[] args) {
+		String input = "abcd";
+
+//		print(test(input));
+//		buildMessage(input);
+//		System.out.println();
+//		test(input + (char) 128);
+		int word = Integer.parseInt("110111", 2);
+		int word2 = rotr(word, 3);
+
+	}
+
+//	public static void main(String[] args) {
+//		Message m = buildMessage("abcd");
+//		HashFunction.print(m);
+//		System.out.println();
+//		HashFunction.print(BitOperations.add(m.getBlock(0)[0], BitOperations.getConstant(1)));
+//		BitOperations.add(m.getBlock(0)[0], null);
+//	}
 }
