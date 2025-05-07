@@ -88,11 +88,11 @@ public class MessageParser {
 		}
 	}
 
-//	public static void main(String[] args) {
-//		Message m = buildMessage("abcd");
-//		HashFunction.print(m);
-//		System.out.println();
-//		HashFunction.print(BitOperations.add(m.getBlock(0)[0], BitOperations.getConstant(1)));
-//		BitOperations.add(m.getBlock(0)[0], null);
-//	}
+	public static void main(String[] args) {
+		Message m = buildMessage("abcd");
+		HashFunction.print(m);
+		System.out.println();
+		HashFunction.print(BitOperations.add(m.getBlock(0)[0], BitOperations.getConstant(0)));
+		BitOperations.add(m.getBlock(0)[0], null);
+	}
 }

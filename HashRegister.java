@@ -17,9 +17,8 @@ public class HashRegister extends BitOperations {
 	 */
 	public HashRegister(String input) {
 		initRegister();		
-		compress(MessageParser.buildMessage(input));
-//		HashFunction.print(register);
-//		System.out.println(hash());
+		Message m = MessageParser.buildMessage(input);
+		compress(m);
 	}
 
 	/**
@@ -59,7 +58,7 @@ public class HashRegister extends BitOperations {
 	public void compressBlock(BitSet[] block) {
 		for (int i = 0; i < 64; i++) {
 			BitSet[] registerArray = register.toArray(new BitSet[0]);
-			BitSet t1 = t1(registerArray, getConstant(i), block[i]);
+			BitSet t1 = t1(registerArray, block[i], getConstant(i));
 			BitSet t2 = t2(registerArray);
 			updateRegister(add(t1, t2), add(t1, registerArray[3]));
 		}
@@ -84,11 +83,11 @@ public class HashRegister extends BitOperations {
 	 * Calculates the first temporary word used in compression.
 	 * 
 	 * @param register
-	 * @param constant
 	 * @param schedule
+	 * @param constant
 	 * @return
 	 */
-	public BitSet t1(BitSet[] register, BitSet constant, BitSet schedule) {
+	public BitSet t1(BitSet[] register, BitSet schedule, BitSet constant) {
 		BitSet[] components = new BitSet[] { 
 				Σ1(register[4]), 
 				choice(register[4], register[5], register[6]),
