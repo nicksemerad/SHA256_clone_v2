@@ -7,6 +7,8 @@ How secure is 256 bit security? Check out this awesome video by
 [3Blue1Brown on youtube](https://www.youtube.com/watch?v=S9JGmA5_unY&ab_channel=3Blue1Brown3Blue1Brown). 
 Hint: very secure!
 
+This wouldn't have been possible without [this video](https://www.youtube.com/watch?v=f9EbD6iY9zI) by learnmeabitcoin.
+
 ## How to run:
 
 1) Download the HashFunction.java file to your desired directory
