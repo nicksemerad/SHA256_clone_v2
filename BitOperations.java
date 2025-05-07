@@ -253,5 +253,16 @@ public class BitOperations {
 	private static boolean sumBits(boolean valOne, boolean valTwo, boolean valThree) {
 		return ((valOne ? 1 : 0) + (valTwo ? 1 : 0) + (valThree ? 1 : 0)) > 1;
 	}
+	
+	public static void main(String[] args) {
+		
+		BitSet a = binaryToBits("01100001011000100110001101100100");
+		BitSet b = binaryToBits("10000000000000000000000000000000");
+		BitSet c = binaryToBits("00000000000000000000000000000000");
+		BitSet d = binaryToBits("00000000000000000000000000000000");
+		
+		
+		
+	}
 
 }
