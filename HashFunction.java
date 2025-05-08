@@ -1,4 +1,4 @@
-package nicks_hash_function;
+package sha256;
 
 /**
  * This class is a clone of the famous SHA256 hashing algorithm. It can be used
@@ -285,13 +285,7 @@ public class HashFunction {
 	}
 
 	public static void main(String[] args) {
-		String input;
-		if (args.length > 1) {
-			input = args[0];
-		} else {
-			input = "abc";
-		}
-		System.out.println(hash(input));
+		System.out.println(hash(args[0]));
 	}
 
 }

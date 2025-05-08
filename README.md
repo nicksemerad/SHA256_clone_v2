@@ -11,26 +11,25 @@ This wouldn't have been possible without [this video](https://www.youtube.com/wa
 
 ## How to run:
 
-1) Download the HashFunction.java file to your desired directory
+1) Download the HashFunction.java file and place it into a folder named "sha256"
 
-2) Open Terminal and navigate your current working directory to wherever you put HashFunction.java
+2) Open Terminal and navigate to the directory where your "sha256" folder is located
 
 3) Run the following terminal command to compile the program: 
 
-`javac HashFunction.java`
+`javac sha256/HashFunction.java`
 
 4) The program is now compiled and ready to use!
 
 
 5) Run the following terminal command replacing "abc" with whatever text you want to hash:
 
-`java HashFunction abc`
+`java sha256.HashFunction abc`
 
 6) The Hash of your input string will be printed to terminal!
 
-You can test the program by running the command without an input string, which will print the hash for "abc":
+You can test the program by running the command with the input string "abc" which will print:
 
-`java HashFunction`
 
 - ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
 
